@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrusel de Momentos Especiales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f7f3ec;
+            color: #4a3e3d;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* Cream Canvas/Paper Textured Background */
+        .cream-textured-bg {
+            background-color: #f6f1e9;
+            background-image: 
+                radial-gradient(at 80% 20%, rgba(245, 230, 211, 0.5) 0px, transparent 50%),
+                radial-gradient(at 20% 80%, rgba(235, 218, 195, 0.6) 0px, transparent 50%),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+        }
+
+        .handwritten {
+            font-family: 'Caveat', cursive;
+        }
+
+        /* 3D Coverflow Viewport Container */
+        .carousel-viewport {
+            perspective: 1200px;
+            width: 100%;
+            height: 480px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (min-width: 768px) {
+            .carousel-viewport {
+                height: 560px;
+            }
+        }
+
+        /* Slide Card Styles */
+        .carousel-slide {
+            position: absolute;
+            width: 280px;
+            height: 390px;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease, filter 0.6s ease, box-shadow 0.6s ease;
+            cursor: pointer;
+            will-change: transform, opacity;
+            border-radius: 18px;
+            background: #ffffff;
+            padding: 12px 12px 28px 12px;
+            box-shadow: 0 15px 35px -10px rgba(85, 60, 45, 0.15), 0 5px 15px rgba(0,0,0,0.05);
+            border: 1px solid rgba(220, 205, 185, 0.5);
+        }
+
+        @media (min-width: 768px) {
+            .carousel-slide {
+                width: 340px;
+                height: 460px;
+                padding: 16px 16px 36px 16px;
+            }
+        }
+
+        .carousel-slide img {
+            width: 100%;
+            height: 82%;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        /* Glassmorphism Navigation Controls */
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(210, 190, 170, 0.4);
+            box-shadow: 0 8px 20px rgba(90, 70, 50, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .glass-btn:hover {
+            background: rgba(255, 255, 255, 0.95);
+            transform: scale(1.08);
+            box-shadow: 0 10px 25px rgba(90, 70, 50, 0.18);
+        }
+
+        .glass-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Custom Thumbnail Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(210, 190, 170, 0.2);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(180, 150, 120, 0.5);
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(150, 120, 90, 0.7);
+        }
+    </style>
+</head>
+<body class="cream-textured-bg min-h-screen flex flex-col justify-between items-center p-4 md:p-8">
+
+    <header class="text-center mt-2 mb-4 md:mb-6">
+        <span class="inline-block px-4 py-1.5 rounded-full text-xs font-semibold tracking-wider uppercase text-amber-800 bg-amber-100/60 border border-amber-200/50 mb-2">
+            <i class="fa-solid fa-heart text-rose-500 mr-1.5"></i> Álbum Especial
+        </span>
+        <h1 class="text-3xl md:text-5xl font-bold text-stone-800 tracking-tight">Nuestros Recuerdos</h1>
+        <p class="text-stone-500 text-sm md:text-base mt-1 handwritten text-xl md:text-2xl">Un recorrido por momentos inolvidables</p>
+    </header>
+
+    <main class="w-full max-w-6xl flex-1 flex flex-col justify-center items-center relative">
+        <div id="carousel-viewport" class="carousel-viewport">
+            <!-- Slides will be dynamically injected here -->
+        </div>
+
+        <!-- Navigation Buttons (Floating Left/Right) -->
+        <button id="prev-btn" aria-label="Foto Anterior" class="glass-btn absolute left-2 md:left-8 top-1/2 -translate-y-1/2 z-40 w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-stone-700 text-lg md:text-xl">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button id="next-btn" aria-label="Foto Siguiente" class="glass-btn absolute right-2 md:right-8 top-1/2 -translate-y-1/2 z-40 w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-stone-700 text-lg md:text-xl">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+    </main>
+
+    <footer class="w-full max-w-4xl mt-4 md:mt-6 flex flex-col items-center gap-4">
+        <!-- Play/Pause Autoplay & Status -->
+        <div class="flex items-center gap-4 bg-white/60 backdrop-blur-md px-5 py-2.5 rounded-full border border-amber-200/50 shadow-sm">
+            <button id="autoplay-btn" class="flex items-center gap-2 text-xs md:text-sm font-medium text-stone-700 hover:text-amber-800 transition-colors">
+                <i id="autoplay-icon" class="fa-solid fa-play text-amber-700"></i>
+                <span id="autoplay-text">Reproducción Automática</span>
+            </button>
+            <div class="h-4 w-px bg-stone-300"></div>
+            <span id="slide-counter" class="text-xs md:text-sm font-semibold text-stone-600">1 / 9</span>
+        </div>
+
+        <!-- Thumbnail Strip Indicators -->
+        <div id="thumbnails-container" class="w-full flex items-center justify-center gap-2.5 overflow-x-auto py-2 px-4 custom-scrollbar">
+            <!-- Thumbnails injected via JS -->
+        </div>
+    </footer>
+
+    <script>
+        // Array of images provided
+        const photos = [
+            { url: '1000084810.jpg', title: 'Sonrisas Compartidas', caption: 'Noche especial juntos' },
+            { url: '1000084809.jpg', title: 'Momentos Dulces', caption: 'Disfrutando el día' },
+            { url: '1000084808.jpg', title: 'Situación Sentimental', caption: 'Génesis 2:18 ❤️' },
+            { url: '1000084806.jpg', title: 'Días Llenos de Luz', caption: 'Juntos siempre' },
+            { url: '1000084820.jpg', title: 'Complicidad', caption: 'Hermosos recuerdos' },
+            { url: '1000084819.jpg', title: 'Cerca de Ti', caption: 'Miradas inolvidables' },
+            { url: '1000084817.jpg', title: 'Elegancia & Amor', caption: 'Un gran momento' },
+            { url: '1000084816.jpg', title: 'Abrazos Cálidos', caption: 'Tranquilidad y felicidad' },
+            { url: '1000084812.jpg', title: 'Tardes Juntos', caption: 'Disfrutando de la compañía' }
+        ];
+
+        let currentIndex = 0;
+        let isAutoplay = false;
+        let autoplayTimer = null;
+        let startX = 0;
+        let currentX = 0;
+        let isDragging = false;
+
+        const viewport = document.getElementById('carousel-viewport');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const autoplayBtn = document.getElementById('autoplay-btn');
+        const autoplayIcon = document.getElementById('autoplay-icon');
+        const autoplayText = document.getElementById('autoplay-text');
+        const slideCounter = document.getElementById('slide-counter');
+        const thumbnailsContainer = document.getElementById('thumbnails-container');
+
+        /* Initialize Carousel Elements */
+        function initCarousel() {
+            viewport.innerHTML = '';
+            thumbnailsContainer.innerHTML = '';
+
+            photos.forEach((photo, idx) => {
+                // Create Slide Element
+                const slide = document.createElement('div');
+                slide.className = 'carousel-slide flex flex-col items-center justify-between select-none';
+                slide.dataset.index = idx;
+
+                slide.innerHTML = `
+                    <img src="${photo.url}" alt="${photo.title}" loading="lazy" onerror="this.src='https://placehold.co/400x500/e2d7c7/5c4a3e?text=Foto+${idx+1}'">
+                    <div class="mt-2 text-center w-full">
+                        <h3 class="text-sm md:text-base font-bold text-stone-800 truncate">${photo.title}</h3>
+                        <p class="handwritten text-lg md:text-xl text-amber-800 -mt-1 truncate">${photo.caption}</p>
+                    </div>
+                `;
+
+                slide.addEventListener('click', () => {
+                    if (currentIndex !== idx) {
+                        currentIndex = idx;
+                        updateCarousel();
+                    }
+                });
+
+                viewport.appendChild(slide);
+
+                // Create Thumbnail Element
+                const thumb = document.createElement('button');
+                thumb.className = `flex-shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-xl overflow-hidden border-2 transition-all duration-300 transform`;
+                thumb.innerHTML = `<img src="${photo.url}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/100x100/e2d7c7/5c4a3e?text=${idx+1}'">`;
+                thumb.addEventListener('click', () => {
+                    currentIndex = idx;
+                    updateCarousel();
+                });
+                thumbnailsContainer.appendChild(thumb);
+            });
+
+            updateCarousel();
+        }
+
+        function updateCarousel() {
+            const slides = document.querySelectorAll('.carousel-slide');
+            const thumbs = thumbnailsContainer.children;
+            const total = photos.length;
+
+            slides.forEach((slide, idx) => {
+                let offset = idx - currentIndex;
+
+                // Handle circular index offset for relative positioning
+                if (offset > total / 2) offset -= total;
+                if (offset < -total / 2) offset += total;
+
+                const absOffset = Math.abs(offset);
+
+                if (absOffset > 3) {
+                    slide.style.opacity = '0';
+                    slide.style.pointerEvents = 'none';
+                    slide.style.transform = `translateX(${offset * 120}%) scale(0.5) rotateY(${offset > 0 ? -45 : 45}deg)`;
+                    slide.style.zIndex = '0';
+                } else {
+                    slide.style.opacity = offset === 0 ? '1' : `${1 - absOffset * 0.25}`;
+                    slide.style.pointerEvents = 'auto';
+
+                    // 3D positioning logic
+                    const translateX = offset * (window.innerWidth < 768 ? 65 : 75); // Percentage spacing
+                    const translateZ = -absOffset * 150; // Depth push back
+                    const rotateY = offset * -25; // Y rotation angle
+                    const scale = offset === 0 ? 1 : 1 - absOffset * 0.12;
+
+                    slide.style.transform = `translateX(${translateX}%) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`;
+                    slide.style.zIndex = `${100 - absOffset * 10}`;
+
+                    // Styling enhancements for active vs inactive
+                    if (offset === 0) {
+                        slide.style.filter = 'none';
+                        slide.style.boxShadow = '0 20px 40px -10px rgba(70, 45, 30, 0.25), 0 0 0 2px rgba(217, 119, 6, 0.4)';
+                    } else {
+                        slide.style.filter = 'brightness(0.88) contrast(0.95)';
+                        slide.style.boxShadow = '0 10px 25px -10px rgba(0,0,0,0.15)';
+                    }
+                }
+            });
+
+            // Update Thumbnail highlights
+            Array.from(thumbs).forEach((thumb, idx) => {
+                if (idx === currentIndex) {
+                    thumb.className = 'flex-shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-xl overflow-hidden border-2 border-amber-600 scale-110 shadow-md ring-2 ring-amber-500/30';
+                    thumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                } else {
+                    thumb.className = 'flex-shrink-0 w-12 h-12 md:w-14 md:h-14 rounded-xl overflow-hidden border-2 border-transparent opacity-60 hover:opacity-100 scale-100 transition-all';
+                }
+            });
+
+            // Update Counter Text
+            slideCounter.textContent = `${currentIndex + 1} / ${total}`;
+        }
+
+        /* Next & Prev Functions */
+        function nextSlide() {
+            currentIndex = (currentIndex + 1) % photos.length;
+            updateCarousel();
+        }
+
+        function prevSlide() {
+            currentIndex = (currentIndex - 1 + photos.length) % photos.length;
+            updateCarousel();
+        }
+
+        /* Autoplay Toggle */
+        function toggleAutoplay() {
+            isAutoplay = !isAutoplay;
+            if (isAutoplay) {
+                autoplayIcon.className = 'fa-solid fa-pause text-amber-700';
+                autoplayText.textContent = 'Pausar';
+                autoplayTimer = setInterval(nextSlide, 3500);
+            } else {
+                autoplayIcon.className = 'fa-solid fa-play text-amber-700';
+                autoplayText.textContent = 'Reproducción Automática';
+                clearInterval(autoplayTimer);
+            }
+        }
+
+        /* Event Listeners */
+        prevBtn.addEventListener('click', () => {
+            prevSlide();
+            if (isAutoplay) toggleAutoplay(); // pause autoplay on manual click
+        });
+
+        nextBtn.addEventListener('click', () => {
+            nextSlide();
+            if (isAutoplay) toggleAutoplay();
+        });
+
+        autoplayBtn.addEventListener('click', toggleAutoplay);
+
+        // Keyboard Navigation (Left / Right Arrow Keys)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') prevSlide();
+            if (e.key === 'ArrowRight') nextSlide();
+        });
+
+        viewport.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            isDragging = true;
+        }, { passive: true });
+
+        viewport.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            currentX = e.touches[0].clientX;
+        }, { passive: true });
+
+        viewport.addEventListener('touchend', () => {
+            if (!isDragging) return;
+            const diffX = startX - currentX;
+            if (Math.abs(diffX) > 40) {
+                if (diffX > 0) nextSlide();
+                else prevSlide();
+            }
+            isDragging = false;
+        });
+
+        // Mouse Drag Support
+        viewport.addEventListener('mousedown', (e) => {
+            startX = e.clientX;
+            isDragging = true;
+        });
+
+        viewport.addEventListener('mouseup', (e) => {
+            if (!isDragging) return;
+            const diffX = startX - e.clientX;
+            if (Math.abs(diffX) > 40) {
+                if (diffX > 0) nextSlide();
+                else prevSlide();
+            }
+            isDragging = false;
+        });
+
+        // Window resize adjustment
+        window.addEventListener('resize', updateCarousel);
+
+        // Start Carousel on Load
+        window.onload = function() {
+            initCarousel();
+        };
+    </script>
+</body>
+</html>
